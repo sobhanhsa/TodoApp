@@ -3,6 +3,10 @@ const {pool} = require("../database/dbquery")
 const {isEmailValid} = require("../validators/emailValidator")
 const {isUsernameValid} = require("../validators/usernameValidator")
 
+const bcrypt  = require("bcrypt")
+
+const saltRounds = 10;
+
 async function signupHandler(req, res) {
     
     const body = req.body;
@@ -26,10 +30,14 @@ async function signupHandler(req, res) {
         return
     }
 
-    
+    let hashedPassword = ""
+
+    bcrypt.hash(body.password , saltRounds, (err, hash) => {
+        hashedPassword = hash
+    });
 
     pool.query("INSERT INTO users (Username, Email, Name, Password) VALUES($1, $2, $3, $4) RETURNING *",
-    [body.username,body.email,body.name,body.password], (error, result ) => {
+    [body.username,body.email,body.name,hashedPassword], (error, result ) => {
         console.log(result)
         if (error) {
             res.status(400).json({"data":{"message":"error occurred","error":error}})
