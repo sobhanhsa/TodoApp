@@ -3,6 +3,7 @@ const {pool} = require("../database/dbquery")
 const {isEmailValid} = require("../validators/emailValidator")
 const {isUsernameValid} = require("../validators/usernameValidator")
 
+const jwt = require("jsonwebtoken")
 const bcrypt  = require("bcrypt")
 
 const saltRounds = 10;
@@ -32,21 +33,37 @@ async function signupHandler(req, res) {
 
     let hashedPassword = ""
 
-    bcrypt.hash(body.password , saltRounds, (err, hash) => {
+    try {
+        bcrypt.hash(body.password , saltRounds, (err, hash) => {
+ 
+            pool.query("INSERT INTO users (Username, Email, Name, Password) VALUES($1, $2, $3, $4) RETURNING *",
+            [body.username,body.email,body.name,hash], (error, result ) => {
+                // console.log(result)
+                if (error) {
+                    res.status(400).json({"data":{"message":"error occurred","error":error}})
+                    return
+                }
+                
+                const token = jwt.sign({ id: result.rows[0].ID}, process.env.SECRET);
     
-        pool.query("INSERT INTO users (Username, Email, Name, Password) VALUES($1, $2, $3, $4) RETURNING *",
-        [body.username,body.email,body.name,hash], (error, result ) => {
-            console.log(result)
-            if (error) {
-                res.status(400).json({"data":{"message":"error occurred","error":error}})
-                return
-            }
-            res.status(201).json({"data":{"message":"createduser","user":result.rows[0]}})
-        })
-    });
-
-}
+                let expireDate = new Date(Date.now() + 15*24*60*60*1000);
+    
+                res.cookie("access_token", token, {
+                    expires: expireDate,
+                    secure: false,
+                    httpOnly: true,
+                    sameSite: 'lax',
+                })
+    
+                res.status(201).json({"data":{"message":"createduser","user":result.rows[0]}});
+            });
+        });
+    }catch(e) {
+        res.status(500)
+            .json({"data":{"message":"some thing went wrong please inform server staff","error":e}})
+    }
+};
 
 module.exports = {
     signupHandler
-}
+};
