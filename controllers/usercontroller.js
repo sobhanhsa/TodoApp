@@ -1,15 +1,20 @@
-const {pool} = require("../database/dbquery")
+const {pool} = require("../database/dbquery");
 
-const {isEmailValid} = require("../validators/emailValidator")
-const {isUsernameValid} = require("../validators/usernameValidator")
+const {isEmailValid} = require("../validators/emailValidator");
+const {isUsernameValid} = require("../validators/usernameValidator");
 
-const jwt = require("jsonwebtoken")
-const bcrypt  = require("bcrypt")
+const jwt = require("jsonwebtoken");
 
+const bcrypt  = require("bcrypt");
 const saltRounds = 10;
 
 async function signupHandler(req, res) {
     
+    if (req.cookies.access_token) {
+        res.status(406).json({"data":{"message":"you are already logged in"}})
+        return
+    }
+
     const body = req.body;
 
     //check for empty body
