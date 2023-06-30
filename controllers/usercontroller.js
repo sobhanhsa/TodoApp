@@ -33,20 +33,17 @@ async function signupHandler(req, res) {
     let hashedPassword = ""
 
     bcrypt.hash(body.password , saltRounds, (err, hash) => {
-        hashedPassword = hash
-    });
-
-    pool.query("INSERT INTO users (Username, Email, Name, Password) VALUES($1, $2, $3, $4) RETURNING *",
-    [body.username,body.email,body.name,hashedPassword], (error, result ) => {
-        console.log(result)
-        if (error) {
-            res.status(400).json({"data":{"message":"error occurred","error":error}})
-            return
-        }
-        res.status(201).json({"data":{"message":"createduser","user":result.rows[0]}})
-    })
- 
     
+        pool.query("INSERT INTO users (Username, Email, Name, Password) VALUES($1, $2, $3, $4) RETURNING *",
+        [body.username,body.email,body.name,hash], (error, result ) => {
+            console.log(result)
+            if (error) {
+                res.status(400).json({"data":{"message":"error occurred","error":error}})
+                return
+            }
+            res.status(201).json({"data":{"message":"createduser","user":result.rows[0]}})
+        })
+    });
 
 }
 
