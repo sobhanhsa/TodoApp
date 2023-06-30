@@ -1,6 +1,7 @@
 const {pool} = require("../database/dbquery")
 
 const {isEmailValid} = require("../validators/emailValidator")
+const {isUsernameValid} = require("../validators/usernameValidator")
 
 function signupHandler(req, res) {
     
@@ -19,7 +20,11 @@ function signupHandler(req, res) {
         return
     }
 
-
+    //check username
+    if (!isUsernameValid(body.username)) {
+        res.json({"data":{"message":"invalid username"}})
+        return
+    }
 
 }
 
