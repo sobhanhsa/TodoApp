@@ -8,7 +8,7 @@ const app = express();
 
 const cookieParser = require("cookie-parser");
 
-const controllers = require("./controllers/usercontroller");
+const usercontrollers = require("./controllers/usercontroller");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -17,6 +17,10 @@ app.get("/",function(req, res) {
     res.json({"data":{"message":"hello internet!"}})
 });
 
-app.post("/api/signup",controllers.signupHandler);
+app.post("/api/signup",usercontrollers.signupHandler);
+
+app.post("/api/login",usercontrollers.loginHandler)
+
+app.get("/api/logout",usercontrollers.logoutHandler)
 
 app.listen(port, () => console.log("server in running on port %d",port));

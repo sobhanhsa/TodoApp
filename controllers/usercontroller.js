@@ -34,9 +34,7 @@ async function signupHandler(req, res) {
     if (!isUsernameValid(body.username)) {
         res.status(400).json({"data":{"message":"invalid username"}})
         return
-    }
-
-    let hashedPassword = ""
+    };
 
     try {
         bcrypt.hash(body.password , saltRounds, (err, hash) => {
@@ -58,7 +56,7 @@ async function signupHandler(req, res) {
                     secure: false,
                     httpOnly: true,
                     sameSite: 'lax',
-                })
+                });
     
                 res.status(201).json({"data":{"message":"createduser","user":result.rows[0]}});
             });
@@ -66,9 +64,82 @@ async function signupHandler(req, res) {
     }catch(e) {
         res.status(500)
             .json({"data":{"message":"some thing went wrong please inform server staff","error":e}})
-    }
+    };
 };
 
+async function loginHandler(req, res) {
+
+    if (req.cookies.access_token) {
+        res.status(406).json({"data":{"message":"you are already logged in"}})
+        return
+    };
+
+    const body = req.body;
+
+    //check for empty body
+    if (((!body.username) && (!body.email)) || (!body.password) 
+        || ((body.username === "") && (body.email === "")) || (body.name === "") || (body.password === "")) {
+        res.status(400).json({"data":{"message":"please input required fields"}})
+        return
+    };
+
+    let query = "";
+
+    if (body.username !== "") {
+        query = `SELECT * FROM users WHERE Username = '${body.username}'`
+    }else {
+        query = `SELECT * FROM users WHERE Email = '${body.email}'`
+    };
+
+    pool.query(query , (error, result ) => {
+        
+        if (error) {
+            res.status(500).json({"data":{"message":"somethin went wrong , please try lator"}});
+            return
+        };
+
+        if (result.rowCount === 0) {
+            res.status(400).json({"data":{"message":"no users found with given username/email.","error":error}});
+            return
+        };
+
+        bcrypt.compare(body.password, result.rows[0].password, function(err, matched) {  
+            // console.log(matched)
+            if (matched) {
+                const token = jwt.sign({ id: result.rows[0].ID}, process.env.SECRET);
+    
+                let expireDate = new Date(Date.now() + 15*24*60*60*1000);
+    
+
+                //set cookie
+                res.cookie("access_token", token, {
+                    expires: expireDate,
+                    secure: false,
+                    httpOnly: true,
+                    sameSite: 'lax',
+                });
+
+                res.status(200).json({"data":{"message":"wellcome back "+result.rows[0].name,
+                "user":result.rows[0]}});
+            
+                return
+           } else {
+                res.status(400).json({"data":{"message":"incorrect password"}});
+                return
+           };
+        });
+    });
+};
+
+function logoutHandler(req, res) {
+    return res
+        .clearCookie("access_token")
+        .status(200)
+        .json({"data":{ message: "you're successfully logged out"}});
+}
+
 module.exports = {
-    signupHandler
+    signupHandler,
+    loginHandler,
+    logoutHandler
 };
