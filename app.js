@@ -30,4 +30,6 @@ app.post("/api/todo",usercontrollers.authorization,todocontrollers.createTodo)
 
 app.delete("/api/todo/:id",usercontrollers.authorization,todocontrollers.deleteTodo)
 
+app.put("/api/todo/:id",usercontrollers.authorization,todocontrollers.upadateTodo)
+
 app.listen(port, () => console.log("server in running on port %d",port));

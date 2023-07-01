@@ -54,8 +54,41 @@ function deleteTodo(req, res) {
     });
 };
 
+function upadateTodo(req, res){
+    if ((!req.params.id) || (req.params.id === "")) {
+        res.status(400).json({"data":{"message":"please implement id in url"}})
+        return
+    };
+
+    if ((!req.body.description) || (req.body.description === "")) {
+        res.status(400).json({"data":{"message":"please fill required fields"}})
+        return
+    };
+
+    pool.query("UPDATE todo SET Description = $1 WHERE ID = $2 AND UserId = $3 RETURNING *",
+        [req.body.description,parseInt(req.params.id), req.user.id],
+    (error, result) => {
+        if (error) {
+            console.log(error)
+            res.status(500).json({"data":{"message":"please try later"}});
+            return
+        };
+
+        if (result.rowCount === 0 ) {
+            res.status(400).json({"data":{"message":"you dont have any todo with given id","todos length":0}});
+            return
+        };
+
+
+        res.status(202)
+            .json({"data":{"user":req.user,"updated todo":result.rows[0],"todos length":result.rowCount}});
+        return
+    });
+};
+
 module.exports = {
     getTodos,
     createTodo,
     deleteTodo,
+    upadateTodo
 }
