@@ -133,6 +133,12 @@ async function loginHandler(req, res) {
 };
 
 function logoutHandler(req, res) {
+
+    if (!req.cookies.access_token) {
+        res.status(403).json({"data":{"message":"you're not logged in"}})
+        return
+    };
+
     return res
         .clearCookie("access_token")
         .status(200)
