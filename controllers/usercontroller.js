@@ -47,7 +47,7 @@ async function signupHandler(req, res) {
                     return
                 }
                 
-                const token = jwt.sign({ id: result.rows[0].ID}, process.env.SECRET);
+                const token = jwt.sign({ id: result.rows[0].id}, process.env.SECRET);
     
                 let expireDate = new Date(Date.now() + 15*24*60*60*1000);
     
