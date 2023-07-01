@@ -23,4 +23,8 @@ app.post("/api/login",usercontrollers.loginHandler)
 
 app.get("/api/logout",usercontrollers.logoutHandler)
 
+app.get("/api/todos",usercontrollers.authorization,function(req, res) {
+    res.json({"data":{"user":req.user}})
+})
+
 app.listen(port, () => console.log("server in running on port %d",port));

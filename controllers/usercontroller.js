@@ -106,7 +106,8 @@ async function loginHandler(req, res) {
         bcrypt.compare(body.password, result.rows[0].password, function(err, matched) {  
             // console.log(matched)
             if (matched) {
-                const token = jwt.sign({ id: result.rows[0].ID}, process.env.SECRET);
+
+                const token = jwt.sign({ id: result.rows[0].id}, process.env.SECRET);
     
                 let expireDate = new Date(Date.now() + 15*24*60*60*1000);
     
@@ -138,8 +139,39 @@ function logoutHandler(req, res) {
         .json({"data":{ message: "you're successfully logged out"}});
 }
 
+//authorizaion middleware
+function authorization(req, res, next) {
+
+    const token = req.cookies.access_token;
+    
+    if (!token) {
+        res
+            .status(403)
+            .json({"data":{"message":"you're not logged in , to see or publish todo please login"}});
+        return
+    }
+
+    try {
+        const data = jwt.verify(token, process.env.SECRET);
+        
+        pool.query("SELECT * FROM users WHERE ID = $1",[parseInt(data.id)],(err, result) => {
+
+            if (result.rowCount === 0) {
+                return res.status(403).json({"data":{"message":"your account has been deleted."}});
+            }
+
+            req.user = result.rows[0];
+
+            return next();
+        });
+    } catch {
+        return res.status(403).json({"data":{"message":"invalid token"}});
+    };
+}
+
 module.exports = {
     signupHandler,
     loginHandler,
-    logoutHandler
+    logoutHandler,
+    authorization
 };
