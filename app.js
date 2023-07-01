@@ -26,7 +26,8 @@ app.get("/api/logout",usercontrollers.logoutHandler)
 
 app.get("/api/todos",usercontrollers.authorization,todocontrollers.getTodos)
 
-app.post("/api/todo",usercontrollers.authorization,todocontrollers.createTodos)
+app.post("/api/todo",usercontrollers.authorization,todocontrollers.createTodo)
 
+app.delete("/api/todo/:id",usercontrollers.authorization,todocontrollers.deleteTodo)
 
 app.listen(port, () => console.log("server in running on port %d",port));
